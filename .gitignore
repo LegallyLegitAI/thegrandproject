@@ -1,0 +1,24 @@
+# Dependencies
+/node_modules
+
+# Next.js build output
+/.next/
+/out/
+
+# Production
+/build
+
+# Miscellaneous
+.DS_Store
+*.pem
+
+# Local Environment Variables
+# (NEVER commit these to a public repository)
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# IDE config
+.vscode/
+.idea/

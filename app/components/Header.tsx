@@ -32,6 +32,7 @@ import { navigateTo, showToast } from '@/app/lib/actions';
 import { Icon } from './Icon';
 import { Page } from '../lib/types';
 
+// ...rest of your code
 function NavLink({ page, label, currentPage, dispatch }: { page: Page, label: string, currentPage: Page, dispatch: any }) {
     const handleNavClick = (e: React.MouseEvent) => {
         e.preventDefault();

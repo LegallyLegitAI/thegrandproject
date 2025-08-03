@@ -11,7 +11,8 @@ export type Action =
   | { type: 'SET_RESULTS'; payload: { score: number; risks: Risk[] } }
   | { type: 'HYDRATE_STATE'; payload: Partial<AppState> }
   | { type: 'ANSWER_QUESTION'; payload: { questionId: string; answer: string } }
-  | { type: 'SET_HEALTH_CHECK_STEP'; payload: number };
+  | { type: 'SET_HEALTH_CHECK_STEP'; payload: number }
+  | { type: 'SET_DOC_STUDIO_STATE'; payload: Partial<AppState['docStudio']> }; // <-- ADDED THIS LINE
 
 
 // --- ACTION FUNCTIONS ---
@@ -87,5 +88,3 @@ export const initiateCheckout = async (planId: string, userEmail: string) => {
     console.error('Checkout initiation failed:', error);
   }
 };
-```
-```typescript

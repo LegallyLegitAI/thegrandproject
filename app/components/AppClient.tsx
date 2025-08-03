@@ -10,7 +10,7 @@ import HealthCheck from './HealthCheck';
 import ResultsPage, { EmailCapture } from './ResultsPage';
 import DocStudio from './DocStudio';
 import Dashboard from './Dashboard';
-import PricingPage from './PricingPage';
+import PricingPage from '../Pricing';
 import CalendarPage from './CalendarPage';
 import AboutPage from './AboutPage';
 import BlogPage from './BlogPage';

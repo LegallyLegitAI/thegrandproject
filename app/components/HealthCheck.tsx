@@ -8,7 +8,8 @@ import { Button, Progress } from './common';
 export default function HealthCheck() {
   const { state, dispatch } = useStateContext();
   const { healthCheckStep } = state;
-  const currentQuestion = questions[healthCheckStep];
+  // Use optional chaining for safety in case `questions` is not yet loaded.
+  const currentQuestion = questions?.[healthCheckStep];
 
   const onAnswer = (questionId: string, answer: string) => {
     handleAnswerQuestion(dispatch, state, questionId, answer, questions);
@@ -19,6 +20,12 @@ export default function HealthCheck() {
       dispatch({ type: 'SET_HEALTH_CHECK_STEP', payload: healthCheckStep - 1 });
     }
   };
+
+  // Guard Clause: If there's no current question, show a loading state.
+  // This prevents the component from crashing if the data is not ready.
+  if (!currentQuestion) {
+    return <div className="health-check-container">Loading...</div>;
+  }
 
   const progress = ((healthCheckStep + 1) / questions.length) * 100;
 

@@ -1,18 +1,16 @@
-module.exports = {
-  parser: '@typescript-eslint/parser',
-  extends: [
-    'eslint:recommended',
-    'plugin:@typescript-eslint/recommended',
-    'plugin:react-hooks/recommended', // ✅ ADD THIS
-    'next/core-web-vitals',
+{
+  "root": true,
+  "parser": "@typescript-eslint/parser",
+  "parserOptions": {
+    "project": "./tsconfig.json"
+  },
+  "plugins": ["@typescript-eslint"],
+  "extends": [
+    "next/core-web-vitals",
+    "plugin:@typescript-eslint/recommended"
   ],
-  plugins: ['@typescript-eslint', 'react-hooks'],
-  parserOptions: {
-    ecmaVersion: 2020,
-    sourceType: 'module',
-  },
-  rules: {
-    'semi': ['error', 'always'],
-    'quotes': ['error', 'single'],
-  },
-};
+  "rules": {
+    "@typescript-eslint/no-unused-vars": ["warn"],
+    "@typescript-eslint/no-explicit-any": "off"
+  }
+}

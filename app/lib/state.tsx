@@ -1,177 +1,281 @@
-
+// app/lib/state.tsx
 "use client";
 
 import { createContext, useReducer, useEffect, Dispatch, ReactNode, useContext } from 'react';
-import { calendarEvents } from '@/app/components/data';
-import { AppState, Action } from './types';
+import { createClient } from '@/app/lib/supabase';
+import { User } from '@supabase/supabase-js';
 
-export const initialState: AppState = {
-    currentPage: 'landing',
-    currentProcess: null,
-    isLoading: false,
-    error: null,
-    toasts: [],
-    healthCheck: {
-        currentStep: 0,
-        answers: {},
-        isTransitioning: false,
-    },
-    emailCapture: {
-        firstName: '',
-        email: '',
-    },
-    emailGateCompleted: false,
-    results: null,
-    disclaimerCheckboxChecked: false,
-    legalModalView: null,
-    upgradeModalView: null,
-    userTier: 'free',
-    docStudio: {
-        view: 'templates',
-        selectedTemplate: null,
-        formData: {},
-        generatedDoc: null,
-        isSaved: false,
-        isSaving: false,
-        savedDocs: [],
-        contractReviewText: '',
-        contractReviewResults: null,
-    },
-    calendar: {
-        events: [],
-        isAdding: false,
-        view: 'list'
-    },
-    blog: {
-        currentPostId: null,
-    },
-    isNavOpen: false,
-    pricingPeriod: 'monthly',
-};
-
-function stateReducer(state: AppState, action: Action): AppState {
-    switch (action.type) {
-        case 'SET_PAGE':
-            return { ...state, currentPage: action.payload, isNavOpen: false };
-        case 'SET_LOADING':
-            return { ...state, isLoading: action.payload };
-        case 'SET_NAV_OPEN':
-            return { ...state, isNavOpen: action.payload };
-        case 'SET_HEALTH_CHECK_ANSWERS':
-            return { ...state, healthCheck: { ...state.healthCheck, answers: action.payload } };
-        case 'SET_HEALTH_CHECK_STEP':
-            return { ...state, healthCheck: { ...state.healthCheck, currentStep: action.payload } };
-        case 'SET_HEALTH_CHECK_TRANSITIONING':
-            return { ...state, healthCheck: { ...state.healthCheck, isTransitioning: action.payload } };
-        case 'SET_RESULTS':
-            return { ...state, results: action.payload };
-        case 'SET_EMAIL_GATE_COMPLETED':
-            return { ...state, emailGateCompleted: true, emailCapture: action.payload };
-        case 'SET_DOC_STUDIO_STATE':
-            return { ...state, docStudio: { ...state.docStudio, ...action.payload } };
-        case 'SET_BLOG_STATE':
-            return { ...state, blog: { ...state.blog, ...action.payload } };
-        case 'SET_PRICING_PERIOD':
-            return { ...state, pricingPeriod: action.payload };
-        case 'SET_LEGAL_MODAL':
-            return { ...state, legalModalView: action.payload, disclaimerCheckboxChecked: false };
-        case 'SET_DISCLAIMER_CHECKED':
-            return { ...state, disclaimerCheckboxChecked: action.payload };
-        case 'SET_UPGRADE_MODAL':
-            return { ...state, upgradeModalView: action.payload };
-        case 'ADD_TOAST':
-            return { ...state, toasts: [...state.toasts, action.payload] };
-        case 'REMOVE_TOAST':
-            return { ...state, toasts: state.toasts.filter(t => t.id !== action.payload) };
-        case 'SET_CURRENT_PROCESS':
-            return { ...state, currentProcess: action.payload };
-        case 'SET_ERROR':
-            return { ...state, error: action.payload };
-        case 'SET_USER_TIER':
-            return {...state, userTier: action.payload };
-        case 'RESET_STATE':
-            return { ...initialState, emailCapture: state.emailCapture, calendar: { ...initialState.calendar, events: calendarEvents }};
-        case 'HYDRATE_STATE':
-            return { ...state, ...action.payload };
-        default:
-            return state;
-    }
+// Update your AppState type to include auth
+export interface AppState {
+  // Auth state
+  isAuthenticated: boolean;
+  user: {
+    id: string;
+    email: string;
+    fullName: string;
+    companyName: string;
+    tier: 'free' | 'essentials' | 'pro';
+  } | null;
+  
+  // Keep your existing state properties
+  currentPage: Page;
+  currentProcess: 'subscribing' | 'purchasing' | null;
+  isLoading: boolean;
+  error: { type: string; message: string } | null;
+  toasts: { id: number; message: string; type: 'success' | 'info' | 'error' }[];
+  
+  // Update these to work with database
+  healthCheck: {
+    currentStep: number;
+    answers: Record<string, string>;
+    isTransitioning: boolean;
+    savedResults?: any; // From database
+  };
+  
+  // Remove emailGateCompleted - use isAuthenticated instead
+  results: { score: number; risks: Risk[] } | null;
+  
+  // Keep rest of your state...
+  disclaimerCheckboxChecked: boolean;
+  legalModalView: string | null;
+  upgradeModalView: string | null;
+  docStudio: any;
+  calendar: any;
+  blog: any;
+  isNavOpen: boolean;
+  pricingPeriod: 'monthly' | 'annual';
 }
 
-export const StateContext = createContext<{ state: AppState; dispatch: Dispatch<Action> }>({
-    state: initialState,
-    dispatch: () => null,
+// Add auth action types
+export type Action = 
+  | { type: 'SET_AUTH_STATE'; payload: { isAuthenticated: boolean; user: AppState['user'] } }
+  | { type: 'LOGOUT' }
+  // ... your existing actions
+  | { type: 'SET_PAGE'; payload: Page }
+  | { type: 'SET_LOADING'; payload: boolean }
+  // etc...
+
+// Updated reducer
+function stateReducer(state: AppState, action: Action): AppState {
+  switch (action.type) {
+    case 'SET_AUTH_STATE':
+      return { 
+        ...state, 
+        isAuthenticated: action.payload.isAuthenticated,
+        user: action.payload.user 
+      };
+      
+    case 'LOGOUT':
+      // Clear sensitive data but keep preferences
+      return { 
+        ...initialState,
+        pricingPeriod: state.pricingPeriod 
+      };
+      
+    // Your existing cases...
+    default:
+      return state;
+  }
+}
+
+// Initial state
+export const initialState: AppState = {
+  isAuthenticated: false,
+  user: null,
+  currentPage: 'landing',
+  currentProcess: null,
+  isLoading: false,
+  error: null,
+  toasts: [],
+  healthCheck: {
+    currentStep: 0,
+    answers: {},
+    isTransitioning: false,
+  },
+  results: null,
+  disclaimerCheckboxChecked: false,
+  legalModalView: null,
+  upgradeModalView: null,
+  docStudio: {
+    view: 'templates',
+    selectedTemplate: null,
+    formData: {},
+    generatedDoc: null,
+    savedDocs: [], // Will load from database
+    contractReviewText: '',
+    contractReviewResults: null,
+  },
+  calendar: {
+    events: [], // Will load from database
+    isAdding: false,
+    view: 'list'
+  },
+  blog: {
+    currentPostId: null,
+  },
+  isNavOpen: false,
+  pricingPeriod: 'monthly',
+};
+
+export const StateContext = createContext<{ 
+  state: AppState; 
+  dispatch: Dispatch<Action> 
+}>({
+  state: initialState,
+  dispatch: () => null,
 });
 
 export const useStateContext = () => useContext(StateContext);
 
+// Enhanced State Provider with Auth
 export const StateProvider = ({ children }: { children: ReactNode }) => {
-    const [state, dispatch] = useReducer(stateReducer, initialState);
+  const [state, dispatch] = useReducer(stateReducer, initialState);
+  const supabase = createClient();
 
-    useEffect(() => {
-        try {
-            const savedState = localStorage.getItem('legallyLegitAiState');
-            if (savedState) {
-                const parsedState = JSON.parse(savedState);
-                dispatch({
-                    type: 'HYDRATE_STATE', payload: {
-                        ...parsedState,
-                        isLoading: false,
-                        error: null,
-                        isNavOpen: false,
-                        currentProcess: null,
-                        toasts: [],
-                        calendar: { ...initialState.calendar, events: calendarEvents },
-                    }
-                });
-            } else {
-                 dispatch({ type: 'HYDRATE_STATE', payload: { calendar: { ...initialState.calendar, events: calendarEvents } }});
-            }
-        } catch (e) {
-            console.error("Could not load state from localStorage", e);
-            localStorage.removeItem('legallyLegitAiState');
-        }
-    }, []);
-
-    useEffect(() => {
-        try {
-            const transientState = {
-                isLoading: undefined, 
-                error: undefined, 
-                isNavOpen: undefined, 
-                currentProcess: undefined, 
-                toasts: undefined 
-            };
-            const stateToSave = { ...state, ...transientState };
-            localStorage.setItem('legallyLegitAiState', JSON.stringify(stateToSave));
-        } catch (e) {
-            console.error("Could not save state to localStorage", e);
-        }
-    }, [state]);
+  // Check auth on mount
+  useEffect(() => {
+    checkUser();
     
-    useEffect(() => {
-        const urlParams = new URLSearchParams(window.location.search);
-        const paymentStatus = urlParams.get('payment');
-        const cancelStatus = urlParams.get('status');
+    // Listen for auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (session) {
+        checkUser();
+      } else {
+        dispatch({ type: 'LOGOUT' });
+      }
+    });
 
-        if (paymentStatus === 'success') {
-            dispatch({ type: 'SET_PAGE', payload: 'dashboard' });
-            dispatch({ type: 'SET_USER_TIER', payload: state.currentProcess === 'purchasing' ? state.userTier : 'essentials' });
-            dispatch({ type: 'ADD_TOAST', payload: { id: Date.now(), message: 'Welcome! Your purchase was successful.', type: 'success' } });
-            dispatch({ type: 'SET_CURRENT_PROCESS', payload: null });
-            window.history.replaceState({}, '', window.location.pathname);
-        } else if (cancelStatus === 'cancelled') {
-            dispatch({ type: 'ADD_TOAST', payload: { id: Date.now(), message: 'Your purchase was cancelled.', type: 'info' } });
-            dispatch({ type: 'SET_PAGE', payload: 'pricing' });
-            dispatch({ type: 'SET_CURRENT_PROCESS', payload: null });
-            window.history.replaceState({}, '', window.location.pathname);
+    return () => subscription.unsubscribe();
+  }, []);
+
+  // Load user data from database
+  const checkUser = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (user) {
+        // Get full user profile from database
+        const { data: profile } = await supabase
+          .from('users')
+          .select('*')
+          .eq('id', user.id)
+          .single();
+          
+        if (profile) {
+          dispatch({
+            type: 'SET_AUTH_STATE',
+            payload: {
+              isAuthenticated: true,
+              user: {
+                id: user.id,
+                email: user.email!,
+                fullName: profile.full_name || '',
+                companyName: profile.company_name || '',
+                tier: profile.subscription_tier || 'free'
+              }
+            }
+          });
+          
+          // Load user's saved data
+          loadUserData(user.id);
         }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
+      }
+    } catch (error) {
+      console.error('Auth check error:', error);
+    }
+  };
 
-    return (
-        <StateContext.Provider value={{ state, dispatch }}>
-            {children}
-        </StateContext.Provider>
-    );
+  // Load user data from database
+  const loadUserData = async (userId: string) => {
+    try {
+      // Load saved documents
+      const { data: documents } = await supabase
+        .from('documents')
+        .select('*')
+        .eq('user_id', userId)
+        .order('created_at', { ascending: false });
+        
+      if (documents) {
+        dispatch({
+          type: 'HYDRATE_STATE',
+          payload: {
+            docStudio: {
+              ...state.docStudio,
+              savedDocs: documents.map(doc => ({
+                id: doc.id,
+                templateKey: doc.template_key,
+                name: doc.name,
+                date: new Date(doc.created_at).toLocaleDateString('en-AU'),
+                content: doc.content
+              }))
+            }
+          }
+        });
+      }
+      
+      // Load calendar events
+      const { data: events } = await supabase
+        .from('calendar_events')
+        .select('*')
+        .eq('user_id', userId)
+        .order('date', { ascending: true });
+        
+      if (events) {
+        dispatch({
+          type: 'HYDRATE_STATE',
+          payload: {
+            calendar: {
+              ...state.calendar,
+              events: events.map(e => ({
+                id: e.id,
+                title: e.title,
+                date: e.date,
+                category: e.category,
+                completed: e.completed
+              }))
+            }
+          }
+        });
+      }
+      
+      // Load latest health check
+      const { data: healthCheck } = await supabase
+        .from('health_checks')
+        .select('*')
+        .eq('user_id', userId)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .single();
+        
+      if (healthCheck) {
+        dispatch({
+          type: 'SET_RESULTS',
+          payload: {
+            score: healthCheck.score,
+            risks: healthCheck.risks
+          }
+        });
+      }
+      
+    } catch (error) {
+      console.error('Error loading user data:', error);
+    }
+  };
+
+  // Don't save auth state to localStorage
+  useEffect(() => {
+    // Only save non-sensitive preferences
+    const prefsToSave = {
+      pricingPeriod: state.pricingPeriod,
+      currentPage: state.currentPage,
+    };
+    
+    localStorage.setItem('legallyLegitPrefs', JSON.stringify(prefsToSave));
+  }, [state.pricingPeriod, state.currentPage]);
+
+  return (
+    <StateContext.Provider value={{ state, dispatch }}>
+      {children}
+    </StateContext.Provider>
+  );
 };

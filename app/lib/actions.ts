@@ -1,3 +1,7 @@
+// FILE 1: app/lib/actions.ts
+// I have updated this file to accept 'questions' as a parameter in the 
+// handleAnswerQuestion function to resolve the error.
+
 import { AppState, Page, Risk } from './types';
 import { Dispatch } from 'react';
 import { getStripe } from './stripe';
@@ -14,11 +18,10 @@ export type Action =
   | { type: 'SET_HEALTH_CHECK_STEP'; payload: number };
 
 
-// --- MISSING FUNCTIONS ---
+// --- ACTION FUNCTIONS ---
 
 /**
  * Dispatches an action to change the current page in the application state.
- * This is used for client-side navigation without a full page reload.
  * @param dispatch - The dispatch function from your state context.
  * @param page - The name of the page to navigate to.
  */
@@ -27,9 +30,34 @@ export const navigateTo = (dispatch: Dispatch<Action>, page: Page) => {
 };
 
 /**
+ * Handles the logic for answering a question in the health check.
+ * It records the answer and advances the user to the next step or the results page.
+ * @param dispatch - The dispatch function from your state context.
+ * @param state - The current application state.
+ * @param questionId - The ID of the question being answered.
+ * @param answer - The user's selected answer.
+ * @param questions - The full array of questions.
+ */
+export const handleAnswerQuestion = (dispatch: Dispatch<Action>, state: AppState, questionId: string, answer: string, questions: any[]) => {
+    // Dispatch the action to save the answer
+    dispatch({ type: 'ANSWER_QUESTION', payload: { questionId, answer } });
+
+    // Logic to advance to the next question or finish
+    const currentStep = state.healthCheckStep;
+    const totalQuestions = questions.length;
+
+    if (currentStep < totalQuestions - 1) {
+        // Go to the next question
+        dispatch({ type: 'SET_HEALTH_CHECK_STEP', payload: currentStep + 1 });
+    } else {
+        // All questions answered, go to results page
+        navigateTo(dispatch, 'results');
+    }
+};
+
+
+/**
  * Initiates the Stripe checkout process.
- * This function calls a server-side route to create a Stripe checkout session
- * and then redirects the user to the Stripe payment page.
  * @param planId - The ID of the pricing plan the user is purchasing.
  * @param userEmail - The email of the user for the checkout session.
  */
@@ -54,7 +82,6 @@ export const initiateCheckout = async (planId: string, userEmail: string) => {
       const { error } = await stripe.redirectToCheckout({ sessionId });
       if (error) {
         console.error('Stripe redirect error:', error.message);
-        // You could show an error message to the user here.
       }
     } else {
         throw new Error('Stripe.js has not loaded yet.');
@@ -62,6 +89,61 @@ export const initiateCheckout = async (planId: string, userEmail: string) => {
 
   } catch (error) {
     console.error('Checkout initiation failed:', error);
-    // Handle the error, e.g., show a notification to the user.
   }
 };
+```typescript
+// FILE 2: app/components/HealthCheck.tsx
+// I have updated this file to pass the 'questions' array into the
+// handleAnswerQuestion function when it is called.
+
+'use client';
+
+import { useStateContext } from '@/app/lib/state';
+import { handleAnswerQuestion } from '@/app/lib/actions';
+import { questions } from './data';
+import { Button, Progress } from './common';
+
+export default function HealthCheck() {
+  const { state, dispatch } = useStateContext();
+  const { healthCheckStep } = state;
+  const currentQuestion = questions[healthCheckStep];
+
+  const onAnswer = (questionId: string, answer: string) => {
+    handleAnswerQuestion(dispatch, state, questionId, answer, questions);
+  };
+
+  const handlePreviousQuestion = () => {
+    if (healthCheckStep > 0) {
+      dispatch({ type: 'SET_HEALTH_CHECK_STEP', payload: healthCheckStep - 1 });
+    }
+  };
+
+  const progress = ((healthCheckStep + 1) / questions.length) * 100;
+
+  return (
+    <div className="health-check-container">
+      <Progress value={progress} />
+      <div className="question-card">
+        <h2 className="question-title">{currentQuestion.text}</h2>
+        <div className="options-grid">
+          {currentQuestion.options.map((option) => (
+            <Button
+              key={option.value}
+              variant="outline"
+              onClick={() => onAnswer(currentQuestion.id, option.value)}
+            >
+              {option.text}
+            </Button>
+          ))}
+        </div>
+      </div>
+      <div className="navigation-buttons">
+        {healthCheckStep > 0 && (
+          <Button variant="ghost" onClick={handlePreviousQuestion}>
+            Previous
+          </Button>
+        )}
+      </div>
+    </div>
+  );
+}

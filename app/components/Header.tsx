@@ -1,30 +1,5 @@
-{/* Desktop Navigation (hide on mobile) */}
-{!state.isNavOpen && (
-  <nav className="app-nav desktop-nav">
-    {navLinks.map(link => (
-      <NavLink key={link.page} page={link.page} label={link.label} currentPage={state.currentPage} dispatch={dispatch} />
-    ))}
-  </nav>
-)}
-
-{/* Mobile Slide-out Navigation (only show if nav open) */}
-{state.isNavOpen && (
-  <nav className="app-nav mobile-nav mobile-active">
-    {isLoggedIn && (
-      <>
-        <NavLink page="dashboard" label="Dashboard" currentPage={state.currentPage} dispatch={dispatch} />
-        <NavLink page="docStudio" label="Studio" currentPage={state.currentPage} dispatch={dispatch} />
-        <NavLink page="calendar" label="Calendar" currentPage={state.currentPage} dispatch={dispatch} />
-        <NavLink page="results" label="Risks" currentPage={state.currentPage} dispatch={dispatch} />
-      </>
-    )}
-    {navLinks.map(link => (
-      <NavLink key={link.page} page={link.page} label={link.label} currentPage={state.currentPage} dispatch={dispatch} />
-    ))}
-    {isLoggedIn && <a href="#" onClick={handleLogout}>Logout</a>}
-  </nav>
-)}
 "use client";
+
 import React from 'react';
 import { useStateContext } from '@/app/lib/state';
 import { LOGO_DATA_URI } from './data';
@@ -32,7 +7,6 @@ import { navigateTo, showToast } from '@/app/lib/actions';
 import { Icon } from './Icon';
 import { Page } from '../lib/types';
 
-// ...rest of your code
 function NavLink({ page, label, currentPage, dispatch }: { page: Page, label: string, currentPage: Page, dispatch: any }) {
     const handleNavClick = (e: React.MouseEvent) => {
         e.preventDefault();
@@ -47,7 +21,7 @@ function NavLink({ page, label, currentPage, dispatch }: { page: Page, label: st
 
 export default function Header() {
     const { state, dispatch } = useStateContext();
-    const isLoggedIn = state.isAuthenticated; // switched from emailGateCompleted to isAuthenticated
+    const isLoggedIn = state.isAuthenticated;
     const userTier = state.user?.tier || 'free';
 
     const handleLogoClick = (e: React.MouseEvent) => {
@@ -57,7 +31,7 @@ export default function Header() {
     
     const handleLogout = (e: React.MouseEvent) => {
         e.preventDefault();
-        localStorage.removeItem('legallyLegitPrefs'); // clear your saved prefs
+        localStorage.removeItem('legallyLegitPrefs');
         dispatch({ type: 'LOGOUT' });
         showToast(dispatch, "You have been logged out.", "info");
     };

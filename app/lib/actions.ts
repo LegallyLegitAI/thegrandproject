@@ -1,6 +1,6 @@
-// actions.ts
 import { Dispatch } from 'react';
-import { Action } from './types'; // Adjust the path if your Action type is elsewhere
+import { Action, AppState } from './state'; // adjust path as needed
+import { healthCheckQuestions } from './data';
 
 export const navigateTo = (dispatch: Dispatch<Action>, page: string) => {
   dispatch({ type: 'SET_PAGE', payload: page });
@@ -15,6 +15,20 @@ export const showToast = (
     type: 'ADD_TOAST',
     payload: { id: Date.now(), message, type },
   });
+};
+
+export const handleAnswerQuestion = (
+  dispatch: Dispatch<Action>,
+  state: AppState,
+  questionId: string,
+  answer: string
+) => {
+  dispatch({ type: 'ANSWER_QUESTION', payload: { questionId, answer } });
+
+  const nextStep = state.healthCheck.currentStep + 1;
+  if (nextStep < healthCheckQuestions.length) {
+    dispatch({ type: 'SET_HEALTH_CHECK_STEP', payload: nextStep });
+  }
 };
 
 export const initiateCheckout = async (

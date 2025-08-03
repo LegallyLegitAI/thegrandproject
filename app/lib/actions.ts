@@ -1,4 +1,22 @@
 // actions.ts
+import { Dispatch } from 'react';
+import { Action } from './types'; // Adjust the path if your Action type is elsewhere
+
+export const navigateTo = (dispatch: Dispatch<Action>, page: string) => {
+  dispatch({ type: 'SET_PAGE', payload: page });
+};
+
+export const showToast = (
+  dispatch: Dispatch<Action>,
+  message: string,
+  type: 'info' | 'error' | 'success' = 'info'
+) => {
+  dispatch({
+    type: 'ADD_TOAST',
+    payload: { id: Date.now(), message, type },
+  });
+};
+
 export const initiateCheckout = async (
   dispatch: Dispatch<Action>,
   priceId: string,
@@ -18,7 +36,7 @@ export const initiateCheckout = async (
 
     const session = await response.json();
 
-    window.location.href = session.url;  // Redirect to Stripe checkout
+    window.location.href = session.url; // Redirect to Stripe checkout
   } catch (error: any) {
     dispatch({ type: 'SET_CURRENT_PROCESS', payload: null });
     dispatch({ type: 'SET_ERROR', payload: { type: 'checkout', message: error.message } });

@@ -1,8 +1,10 @@
 "use client";
 
 import { createContext, useReducer, useEffect, Dispatch, ReactNode, useContext } from 'react';
-import { supabase } from './supabase'; // ✅ Uses the configured client
+import { supabase } from './supabase';
 import { User } from '@supabase/supabase-js';
+import { Page, Risk } from './types'; // adjust path as needed
+import { healthCheckQuestions } from './data'; // needed for step limit in reducer
 
 export interface AppState {
   isAuthenticated: boolean;
@@ -44,7 +46,9 @@ export type Action =
   | { type: 'SET_PAGE'; payload: Page }
   | { type: 'SET_LOADING'; payload: boolean }
   | { type: 'SET_RESULTS'; payload: { score: number; risks: Risk[] } }
-  | { type: 'HYDRATE_STATE'; payload: Partial<AppState> };
+  | { type: 'HYDRATE_STATE'; payload: Partial<AppState> }
+  | { type: 'ANSWER_QUESTION'; payload: { questionId: string; answer: string } }
+  | { type: 'SET_HEALTH_CHECK_STEP'; payload: number };
 
 function stateReducer(state: AppState, action: Action): AppState {
   switch (action.type) {
@@ -54,19 +58,47 @@ function stateReducer(state: AppState, action: Action): AppState {
         isAuthenticated: action.payload.isAuthenticated,
         user: action.payload.user
       };
+
     case 'LOGOUT':
       return {
         ...initialState,
         pricingPeriod: state.pricingPeriod
       };
+
     case 'SET_PAGE':
       return { ...state, currentPage: action.payload };
+
     case 'SET_LOADING':
       return { ...state, isLoading: action.payload };
+
     case 'SET_RESULTS':
       return { ...state, results: action.payload };
+
     case 'HYDRATE_STATE':
       return { ...state, ...action.payload };
+
+    case 'ANSWER_QUESTION':
+      return {
+        ...state,
+        healthCheck: {
+          ...state.healthCheck,
+          answers: {
+            ...state.healthCheck.answers,
+            [action.payload.questionId]: action.payload.answer,
+          }
+        }
+      };
+
+    case 'SET_HEALTH_CHECK_STEP':
+      return {
+        ...state,
+        healthCheck: {
+          ...state.healthCheck,
+          currentStep: action.payload,
+          isTransitioning: false,
+        }
+      };
+
     default:
       return state;
   }

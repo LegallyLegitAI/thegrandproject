@@ -1,59 +1,9 @@
-import { Dispatch } from 'react';
-import { Action, AppState } from './state'; // adjust path as needed
-import { healthCheckQuestions } from './data';
-
-export const navigateTo = (dispatch: Dispatch<Action>, page: string) => {
-  dispatch({ type: 'SET_PAGE', payload: page });
-};
-
-export const showToast = (
-  dispatch: Dispatch<Action>,
-  message: string,
-  type: 'info' | 'error' | 'success' = 'info'
-) => {
-  dispatch({
-    type: 'ADD_TOAST',
-    payload: { id: Date.now(), message, type },
-  });
-};
-
-export const handleAnswerQuestion = (
-  dispatch: Dispatch<Action>,
-  state: AppState,
-  questionId: string,
-  answer: string
-) => {
-  dispatch({ type: 'ANSWER_QUESTION', payload: { questionId, answer } });
-
-  const nextStep = state.healthCheck.currentStep + 1;
-  if (nextStep < healthCheckQuestions.length) {
-    dispatch({ type: 'SET_HEALTH_CHECK_STEP', payload: nextStep });
-  }
-};
-
-export const initiateCheckout = async (
-  dispatch: Dispatch<Action>,
-  priceId: string,
-  mode: 'subscription' | 'payment',
-  userEmail: string
-) => {
-  dispatch({ type: 'SET_CURRENT_PROCESS', payload: mode === 'subscription' ? 'subscribing' : 'purchasing' });
-
-  try {
-    const response = await fetch('/api/checkout-sessions', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ priceId, userEmail, mode }),
-    });
-
-    if (!response.ok) throw new Error(await response.text());
-
-    const session = await response.json();
-
-    window.location.href = session.url; // Redirect to Stripe checkout
-  } catch (error: any) {
-    dispatch({ type: 'SET_CURRENT_PROCESS', payload: null });
-    dispatch({ type: 'SET_ERROR', payload: { type: 'checkout', message: error.message } });
-    showToast(dispatch, `Checkout Error: ${error.message}`, 'error');
-  }
-};
+export type Action =
+  | { type: 'SET_AUTH_STATE'; payload: { isAuthenticated: boolean; user: AppState['user'] } }
+  | { type: 'LOGOUT' }
+  | { type: 'SET_PAGE'; payload: Page }
+  | { type: 'SET_LOADING'; payload: boolean }
+  | { type: 'SET_RESULTS'; payload: { score: number; risks: Risk[] } }
+  | { type: 'HYDRATE_STATE'; payload: Partial<AppState> }
+  | { type: 'ANSWER_QUESTION'; payload: { questionId: string; answer: string } }
+  | { type: 'SET_HEALTH_CHECK_STEP'; payload: number };

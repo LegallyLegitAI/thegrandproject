@@ -1,17 +1,19 @@
-
 "use client";
 import React from 'react';
-import { FOUNDER_IMAGE_URL } from './data';
+import Image from 'next/image'; // Import the optimized Image component
 
 export default function AboutPage() {
     return (
         <div className="card" style={{ maxWidth: '800px', textAlign: 'left' }}>
             <h2 className="trust-title" style={{ textAlign: 'center' }}>About Legally Legit AI</h2>
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1rem', margin: '2rem 0' }}>
-                <img
-                    src={FOUNDER_IMAGE_URL}
-                    style={{ borderRadius: '50%', width: '150px', height: '150px', objectFit: 'cover', border: '4px solid var(--accent-teal)' }}
+                <Image
+                    src="/Temeka-Sue-Tin.jpg" // This path now points to your public folder
+                    width={150}
+                    height={150}
+                    style={{ borderRadius: '50%', objectFit: 'cover', border: '4px solid var(--accent-teal)' }}
                     alt="Temeka Sue-Tin, Founder of Legally Legit AI"
+                    priority // Add priority to load the image faster as it's important
                 />
                 <h3 style={{ margin: 0 }}>Temeka Sue-Tin</h3>
                 <p className="subtle-text" style={{ margin:0 }}>Founder & Principal Lawyer</p>

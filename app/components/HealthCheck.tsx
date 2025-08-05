@@ -7,7 +7,6 @@ import { Button, Progress } from './common';
 
 export default function HealthCheck() {
   const { state, dispatch } = useStateContext();
-  // CORRECTED: The component now correctly reads the step from state.healthCheck.currentStep
   const { currentStep: healthCheckStep } = state.healthCheck; 
   
   const currentQuestion = questions?.[healthCheckStep];
@@ -22,7 +21,6 @@ export default function HealthCheck() {
     }
   };
 
-  // Guard Clause: Prevents crashes by showing a loading state if data isn't ready.
   if (currentQuestion === undefined) {
     return <div className="health-check-container">Loading...</div>;
   }
@@ -55,4 +53,4 @@ export default function HealthCheck() {
       </div>
     </div>
   );
-}
+};

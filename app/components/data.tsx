@@ -1,6 +1,5 @@
 import { Risk } from '@/app/lib/types';
 
-// ADDED: The missing 'questions' array for the Health Check.
 export const questions = [
   {
     id: 'q1',
@@ -22,6 +21,27 @@ export const questions = [
   },
   // Add more questions as needed
 ];
+
+// ADDED: The missing 'faqData' array for the Landing Page.
+export const faqData = [
+    {
+        question: 'Are these documents legally binding in Australia?',
+        answer: 'Yes. Every document is drafted by qualified Australian lawyers and is compliant with current national and state legislation. They are designed to be robust and legally enforceable.'
+    },
+    {
+        question: 'What if a law changes after I buy a document?',
+        answer: 'Our "Legal Shield" subscription provides automatic updates. When a law changes that affects a document you use, we update the template and notify you, ensuring you always stay compliant.'
+    },
+    {
+        question: 'Is this a replacement for a lawyer?',
+        answer: 'We are not a law firm and do not provide legal advice. Our service provides high-quality, compliant legal documents and tools. For complex situations or specific legal advice, we always recommend consulting with a qualified lawyer.'
+    },
+    {
+        question: 'What format do the documents come in?',
+        answer: 'All our documents are available for immediate download in both Microsoft Word (.docx) and PDF formats, allowing for easy editing and universal compatibility.'
+    }
+];
+
 
 export const templates = [
     { key: 'client-agreement', name: 'Client Service Agreement', description: 'Define the terms of your client relationships.' },

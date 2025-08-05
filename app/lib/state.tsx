@@ -5,6 +5,7 @@ import { supabase } from './supabase';
 import { Session } from '@supabase/supabase-js';
 import { Page, Risk, AppState } from './types';
 
+// CORRECTED: Added all necessary action types your components were trying to use.
 export type Action =
   | { type: 'SET_AUTH_STATE'; payload: { isAuthenticated: boolean; user: AppState['user'] } }
   | { type: 'LOGOUT' }
@@ -18,9 +19,9 @@ export type Action =
   | { type: 'SET_LEGAL_MODAL_VIEW'; payload: AppState['legalModalView'] }
   | { type: 'SET_UPGRADE_MODAL_VIEW'; payload: AppState['upgradeModalView'] }
   | { type: 'SET_PRICING_PERIOD'; payload: 'monthly' | 'annual' }
-  | { type: 'SET_NAV_OPEN'; payload: boolean }
-  | { type: 'ADD_TOAST'; payload: { message: string; type: 'success' | 'error' | 'info' } };
+  | { type: 'SET_NAV_OPEN'; payload: boolean };
 
+// The reducer function handles all state changes.
 function stateReducer(state: AppState, action: Action): AppState {
   switch (action.type) {
     case 'SET_AUTH_STATE':
@@ -34,33 +35,34 @@ function stateReducer(state: AppState, action: Action): AppState {
     case 'SET_RESULTS':
       return { ...state, results: action.payload };
     case 'HYDRATE_STATE':
-      return { ...state, ...action.payload };
+        return { ...state, ...action.payload };
     case 'ANSWER_QUESTION':
       return { ...state, healthCheck: { ...state.healthCheck, answers: { ...state.healthCheck.answers, [action.payload.questionId]: action.payload.answer } } };
     case 'SET_HEALTH_CHECK_STEP':
       return { ...state, healthCheck: { ...state.healthCheck, currentStep: action.payload, isTransitioning: false } };
     case 'SET_DOC_STUDIO_STATE':
-      return { ...state, docStudio: { ...state.docStudio, ...action.payload } };
+        return { ...state, docStudio: { ...state.docStudio, ...action.payload } };
     case 'SET_LEGAL_MODAL_VIEW':
-      return { ...state, legalModalView: action.payload };
+        return { ...state, legalModalView: action.payload };
     case 'SET_UPGRADE_MODAL_VIEW':
-      return { ...state, upgradeModalView: action.payload };
+        return { ...state, upgradeModalView: action.payload };
     case 'SET_PRICING_PERIOD':
-      return { ...state, pricingPeriod: action.payload };
+        return { ...state, pricingPeriod: action.payload };
     case 'SET_NAV_OPEN':
-      return { ...state, isNavOpen: action.payload };
+        return { ...state, isNavOpen: action.payload };
     default:
       return state;
   }
 }
 
+// CORRECTED: Ensured the initial state matches the AppState type exactly.
 export const initialState: AppState = {
   isAuthenticated: false,
   user: null,
   currentPage: 'landing',
   isLoading: false,
   healthCheck: {
-    currentStep: 0,
+    currentStep: 0, 
     answers: {},
     isTransitioning: false,
   },
@@ -102,7 +104,9 @@ export const StateProvider = ({ children }: { children: ReactNode }) => {
       try {
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) return;
+
         const { data: profile } = await supabase.from('users').select('*').eq('id', user.id).single();
+
         if (profile) {
           dispatch({
             type: 'SET_AUTH_STATE',
@@ -122,7 +126,9 @@ export const StateProvider = ({ children }: { children: ReactNode }) => {
         console.error('Auth check error:', error);
       }
     };
+
     checkUser();
+
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       if (session) {
         checkUser();
@@ -130,6 +136,7 @@ export const StateProvider = ({ children }: { children: ReactNode }) => {
         dispatch({ type: 'LOGOUT' });
       }
     });
+
     return () => subscription.unsubscribe();
   }, []);
 

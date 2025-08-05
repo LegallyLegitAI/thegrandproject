@@ -1,4 +1,3 @@
-
 import { AppState, Page, Risk } from './types';
 import { Dispatch } from 'react';
 import { getStripe } from './stripe';
